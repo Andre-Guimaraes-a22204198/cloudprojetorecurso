@@ -6,6 +6,10 @@
 *.tfvars
 !terraform.tfvars.example
 !ci.tfvars
+*.zip
+
+# Ficheiros de trabalho locais (nao fazem parte do projeto)
+/trust.json
 
 # AWS credentials - NUNCA commitar
 *.pem

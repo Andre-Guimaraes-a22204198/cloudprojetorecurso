@@ -56,7 +56,7 @@ resource "aws_db_instance" "primary" {
   password                = var.db_password
   db_subnet_group_name    = module.primary.db_subnet_group_name
   vpc_security_group_ids  = [module.primary.db_security_group_id]
-  backup_retention_period = 1 # obrigatorio (>0) para permitir read replicas
+  backup_retention_period = 1    # obrigatorio (>0) para permitir read replicas
   multi_az                = true # resiliencia a falha de UMA AZ na primaria
   skip_final_snapshot     = true
   publicly_accessible     = false
