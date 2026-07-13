@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  user-service:
+    image: {{ docker_image_prefix }}/user-service:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://{{ db_endpoint }}/appdb
+      - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
+      - SPRING_DATASOURCE_USERNAME=appuser
+      - SPRING_DATASOURCE_PASSWORD=ChangeMe123!
+      - SPRING_JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+    restart: always
+
+  product-service:
+    image: {{ docker_image_prefix }}/product-service:latest
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://{{ db_endpoint }}/appdb
+      - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
+      - SPRING_DATASOURCE_USERNAME=appuser
+      - SPRING_DATASOURCE_PASSWORD=ChangeMe123!
+      - SPRING_JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - SQS_QUEUE_URL={{ sqs_queue_url }}
+      - AWS_REGION=eu-west-1
+    restart: always
+
+  order-service:
+    image: {{ docker_image_prefix }}/order-service:latest
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://{{ db_endpoint }}/appdb
+      - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
+      - SPRING_DATASOURCE_USERNAME=appuser
+      - SPRING_DATASOURCE_PASSWORD=ChangeMe123!
+      - SPRING_JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - SQS_QUEUE_URL={{ sqs_queue_url }}
+      - AWS_REGION=eu-west-1
+      - SERVICES_USER_URL=http://user-service:8081
+      - SERVICES_PRODUCT_URL=http://product-service:8082
+    restart: always
+
+  api-gateway:
+    image: {{ docker_image_prefix }}/api-gateway:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVICES_USER_URL=http://user-service:8081
+      - SERVICES_PRODUCT_URL=http://product-service:8082
+      - SERVICES_ORDER_URL=http://order-service:8083
+    restart: always
+
+networks:
+  default:
+    name: microservices-network

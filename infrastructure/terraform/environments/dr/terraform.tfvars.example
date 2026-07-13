@@ -1,0 +1,11 @@
+# Copiar para terraform.tfvars e preencher. NAO commitar o terraform.tfvars real.
+project        = "cloudprojetofinal"
+primary_region = "eu-west-1"
+standby_region = "eu-central-1"
+
+# Password inicial do RDS (em producao vem do SSM/Secrets Manager, nao daqui)
+db_password = "TROCAR-por-password-forte"
+
+# Dominio ja delegado a uma hosted zone Route 53 existente
+domain_name    = "app.exemplo.com"
+hosted_zone_id = "Z0123456789ABCDEFGHIJ"

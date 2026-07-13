@@ -1,0 +1,34 @@
+---
+- name: Deploy microservices
+  hosts: app_servers
+  become: yes
+
+  vars:
+    docker_image_prefix: "{{ lookup('env', 'DOCKER_USERNAME') }}"
+    db_endpoint: "{{ lookup('env', 'DB_ENDPOINT') }}"
+    sqs_queue_url: "{{ lookup('env', 'SQS_QUEUE_URL') }}"
+
+  tasks:
+    - name: Pull latest images
+      docker_image:
+        name: "{{ docker_image_prefix }}/{{ item }}"
+        tag: latest
+        source: pull
+        force_source: yes
+      loop:
+        - user-service
+        - product-service
+        - order-service
+        - api-gateway
+
+    - name: Copy docker-compose file
+      template:
+        src: ../templates/docker-compose.yml.j2
+        dest: /home/ec2-user/docker-compose.yml
+        owner: ec2-user
+        group: ec2-user
+
+    - name: Start services
+      shell: docker compose up -d
+      args:
+        chdir: /home/ec2-user

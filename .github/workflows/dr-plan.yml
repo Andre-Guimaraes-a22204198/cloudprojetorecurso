@@ -1,0 +1,41 @@
+# terraform plan do ambiente DR em cada Pull Request.
+# So le/planeia, nunca aplica. Autentica na AWS por OIDC.
+name: DR Plan
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "infrastructure/terraform/**"
+      - ".github/workflows/dr-*.yml"
+
+permissions:
+  id-token: write   # necessario para OIDC
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure/terraform/environments/dr
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: eu-west-1
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - run: terraform init
+      - run: terraform fmt -check -recursive ../../
+      - run: terraform validate
+      - name: Terraform Plan (primary + standby)
+        run: terraform plan -no-color -var-file=ci.tfvars
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}

@@ -1,0 +1,4 @@
+project     = "cloudprojetofinal"
+environment = "dev"
+db_password = "CHANGE_ME"
+key_name    = "cloudprojetofinal-key"

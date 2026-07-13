@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: product-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:productsdb}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: ${SPRING_JPA_DIALECT:org.hibernate.dialect.H2Dialect}
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+logging:
+  level:
+    pt.ulusofona.productservice: DEBUG
+
+aws:
+  region: ${AWS_REGION:eu-west-1}
+
+sqs:
+  queue:
+    url: ${SQS_QUEUE_URL:https://sqs.eu-west-1.amazonaws.com/513432337004/cloudprojetofinal-dev-order-created}

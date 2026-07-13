@@ -1,0 +1,84 @@
+# Simulacao de desastre (failover drill) acionada MANUALMENTE.
+# workflow_dispatch = botao "Run workflow" no GitHub.
+# Simula a queda da regiao primaria, espera que o standby assuma,
+# e mede o RTO (tempo ate o dominio voltar a responder 200).
+name: DR Drill
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Escrever "SIM" para confirmar o drill'
+        required: true
+        default: "NAO"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  drill:
+    if: ${{ github.event.inputs.confirm == 'SIM' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure/terraform/environments/dr
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: eu-west-1
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - run: terraform init
+
+      - name: Ler outputs do estado
+        id: tf
+        run: |
+          echo "domain=$(terraform output -raw app_domain)" >> $GITHUB_OUTPUT
+          echo "asg=$(terraform output -raw primary_alb_dns)" >> $GITHUB_OUTPUT
+
+      - name: Marcar inicio do drill
+        id: start
+        run: echo "t0=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Simular queda da regiao primaria
+        # Reduz o ASG primario a 0 -> o health check do Route 53 comeca a falhar,
+        # o alarme dispara, a Lambda promove a replica e escala o standby.
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name "${{ secrets.PROJECT }}-primary-asg" \
+            --min-size 0 --desired-capacity 0 --region eu-west-1
+
+      - name: Esperar que o dominio volte a responder (mede RTO)
+        run: |
+          DOMAIN="${{ steps.tf.outputs.domain }}"
+          for i in $(seq 1 40); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://$DOMAIN/actuator/health" || echo 000)
+            echo "tentativa $i -> HTTP $CODE"
+            if [ "$CODE" = "200" ]; then
+              T1=$(date +%s)
+              echo "RTO_MEDIDO_SEGUNDOS=$((T1 - ${{ steps.start.outputs.t0 }}))" >> $GITHUB_ENV
+              break
+            fi
+            sleep 15
+          done
+
+      - name: Registar RTO no resumo
+        run: |
+          echo "## Resultado do DR Drill" >> $GITHUB_STEP_SUMMARY
+          echo "- RTO medido: **${RTO_MEDIDO_SEGUNDOS:-nao recuperou} s**" >> $GITHUB_STEP_SUMMARY
+          echo "- Dominio: ${{ steps.tf.outputs.domain }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Restaurar a primaria (repor estado normal)
+        if: always()
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name "${{ secrets.PROJECT }}-primary-asg" \
+            --min-size 0 --desired-capacity 2 --region eu-west-1

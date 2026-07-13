@@ -1,0 +1,42 @@
+# terraform apply do ambiente DR ao fazer merge para main.
+# Protegido por um Environment do GitHub ('production') que exige
+# aprovacao manual antes de aplicar. Um unico pipeline provisiona
+# AS DUAS regioes (primary + standby).
+name: DR Apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infrastructure/terraform/**"
+      - ".github/workflows/dr-apply.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: production   # exige aprovacao (gate) antes de correr
+    defaults:
+      run:
+        working-directory: infrastructure/terraform/environments/dr
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: eu-west-1
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - run: terraform init
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var-file=ci.tfvars
+        env:
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}

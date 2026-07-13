@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build user-service
+        run: mvn clean package -DskipTests
+        working-directory: services/user-service
+
+      - name: Build product-service
+        run: mvn clean package -DskipTests
+        working-directory: services/product-service
+
+      - name: Build order-service
+        run: mvn clean package -DskipTests
+        working-directory: services/order-service
+
+      - name: Build api-gateway
+        run: mvn clean package -DskipTests
+        working-directory: services/api-gateway
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push user-service
+        uses: docker/build-push-action@v5
+        with:
+          context: services/user-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest
+
+      - name: Build and push product-service
+        uses: docker/build-push-action@v5
+        with:
+          context: services/product-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/product-service:latest
+
+      - name: Build and push order-service
+        uses: docker/build-push-action@v5
+        with:
+          context: services/order-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/order-service:latest
+
+      - name: Build and push api-gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: services/api-gateway
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest
