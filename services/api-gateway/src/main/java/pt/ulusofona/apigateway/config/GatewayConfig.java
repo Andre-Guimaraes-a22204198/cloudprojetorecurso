@@ -79,21 +79,27 @@ public class GatewayConfig {
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 // User Service routes
-                // Routes all requests matching /api/users/** to the User Service
+                // Routes all requests matching /api/users/** to the User Service,
+                // stripping the /api prefix before forwarding
                 .route("user-service", r -> r
                         .path("/api/users/**")
+                        .filters(f -> f.stripPrefix(1))
                         .uri(userServiceUrl))
 
                 // Product Service routes
-                // Routes all requests matching /api/products/** to the Product Service
+                // Routes all requests matching /api/products/** to the Product Service,
+                // stripping the /api prefix before forwarding
                 .route("product-service", r -> r
                         .path("/api/products/**")
+                        .filters(f -> f.stripPrefix(1))
                         .uri(productServiceUrl))
 
                 // Order Service routes
-                // Routes all requests matching /api/orders/** to the Order Service
+                // Routes all requests matching /api/orders/** to the Order Service,
+                // stripping the /api prefix before forwarding
                 .route("order-service", r -> r
                         .path("/api/orders/**")
+                        .filters(f -> f.stripPrefix(1))
                         .uri(orderServiceUrl))
 
                 .build();
