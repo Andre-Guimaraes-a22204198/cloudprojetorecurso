@@ -32,5 +32,3 @@ Extensao de DR multi-regiao com failover automatico (padrao **pilot-light**).
 - **Automacao:** alarme CloudWatch -> SNS -> Lambda (promove replica + escala ASG)
 - **Infra:** `infrastructure/terraform/environments/dr` + modulo reutilizavel `modules/region-stack`
 - **Pipelines:** `.github/workflows/dr-plan.yml`, `dr-apply.yml`, `dr-drill.yml` (OIDC)
-- **Runbook:** [docs/dr.md](docs/dr.md)
-- **Guia de defesa (PT):** [GUIA_DEFESA_RECURSO.md](GUIA_DEFESA_RECURSO.md)
