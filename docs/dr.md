@@ -13,6 +13,7 @@ failover entre a regiao primaria e a regiao standby do projeto.
 | Failover de DNS | Route 53 health check + registos primary/secondary |
 | Promocao de dados | Read replica RDS cross-region, promovida por Lambda |
 | **RTO alvo** | **<= 10 minutos** |
+| **RTO medido** | **365 segundos (~6 min 5 s)** — drill real em 2026-07-14 (execucao [29355966916](https://github.com/Andre-Guimaraes-a22204198/cloudprojetorecurso/actions/runs/29355966916)) |
 | **RPO alvo** | **<= 5 minutos** (replicacao assincrona do RDS) |
 
 ## Como funciona (resumo)
@@ -84,10 +85,10 @@ aws autoscaling update-auto-scaling-group \
 
 ## RTO e RPO - numeros
 
-| Metrica | Alvo | Como e medido |
-|---|---|---|
-| **RTO** (tempo ate recuperar) | <= 10 min | Cronometrado pelo workflow `DR Drill` (t0 = queda, t1 = primeiro `200`) |
-| **RPO** (perda maxima de dados) | <= 5 min | Lag de replicacao assincrona do RDS (`ReplicaLag` no CloudWatch) |
+| Metrica | Alvo | Medido | Como e medido |
+|---|---|---|---|
+| **RTO** (tempo ate recuperar) | <= 10 min | **365 s (~6 min 5 s)** | Cronometrado pelo workflow `DR Drill` (t0 = queda, t1 = primeiro `200` apos falha confirmada) |
+| **RPO** (perda maxima de dados) | <= 5 min | — | Lag de replicacao assincrona do RDS (`ReplicaLag` no CloudWatch) |
 
 O RPO nao e zero porque a replicacao e **assincrona**: transacoes confirmadas na
 primaria nos segundos anteriores a falha podem nao ter chegado a replica. Este
