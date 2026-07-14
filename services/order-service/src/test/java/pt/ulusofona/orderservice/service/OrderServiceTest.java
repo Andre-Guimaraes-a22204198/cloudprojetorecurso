@@ -3,10 +3,13 @@ package pt.ulusofona.orderservice.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import pt.ulusofona.orderservice.client.ProductResponse;
 import pt.ulusofona.orderservice.client.ProductServiceClient;
 import pt.ulusofona.orderservice.client.UserResponse;
@@ -34,7 +37,7 @@ import static org.mockito.Mockito.*;
  * 
  * <p>This test class verifies the business logic of the OrderService,
  * including order creation, retrieval, and status updates. It uses
- * Mockito to mock dependencies (repository, Feign clients, Kafka).
+ * Mockito to mock dependencies (repository, Feign clients, SQS).
  * 
  * @author Cloud Computing Course
  * @version 1.0.0
@@ -53,7 +56,10 @@ class OrderServiceTest {
     private ProductServiceClient productServiceClient;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private SqsClient sqsClient;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private OrderService orderService;
@@ -129,7 +135,7 @@ class OrderServiceTest {
         verify(userServiceClient, times(1)).getUserById(1L);
         verify(productServiceClient, times(1)).getProductById(1L);
         verify(orderRepository, times(1)).save(any(Order.class));
-        verify(kafkaTemplate, times(1)).send(eq("order-created"), any());
+        verify(sqsClient, times(1)).sendMessage(any(SendMessageRequest.class));
     }
 
     @Test
@@ -267,7 +273,7 @@ class OrderServiceTest {
         assertEquals(OrderStatus.CONFIRMED, response.getStatus());
         verify(orderRepository, times(1)).findById(1L);
         verify(orderRepository, times(1)).save(any(Order.class));
-        verify(kafkaTemplate, times(1)).send(eq("order-status-changed"), any());
+        verify(sqsClient, times(1)).sendMessage(any(SendMessageRequest.class));
     }
 
     @Test
