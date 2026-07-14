@@ -58,4 +58,5 @@ module "compute" {
   public_subnet_ids     = module.vpc.public_subnet_ids
   app_security_group_id = module.vpc.app_security_group_id
   key_name              = var.key_name
+  queue_arns            = [module.queue.order_created_queue_arn, module.queue.order_dlq_arn]
 }
