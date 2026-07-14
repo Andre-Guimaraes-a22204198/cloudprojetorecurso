@@ -61,6 +61,7 @@ jobs:
 
       - name: Update Ansible inventory
         run: |
+          mkdir -p ansible/inventory
           cat > ansible/inventory/hosts << EOF
           [app_servers]
           $(echo $INSTANCE_IPS | jq -r '.[] | "app ansible_host=" + .')
