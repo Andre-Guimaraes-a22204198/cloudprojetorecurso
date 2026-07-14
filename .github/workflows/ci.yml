@@ -22,19 +22,19 @@ jobs:
           distribution: 'temurin'
 
       - name: Build user-service
-        run: mvn clean package -DskipTests
+        run: mvn clean package
         working-directory: services/user-service
 
       - name: Build product-service
-        run: mvn clean package -DskipTests
+        run: mvn clean package
         working-directory: services/product-service
 
       - name: Build order-service
-        run: mvn clean package -DskipTests
+        run: mvn clean package
         working-directory: services/order-service
 
       - name: Build api-gateway
-        run: mvn clean package -DskipTests
+        run: mvn clean package
         working-directory: services/api-gateway
 
       - name: Set up Docker Buildx
@@ -51,25 +51,33 @@ jobs:
         with:
           context: services/user-service
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/user-service:${{ github.sha }}
 
       - name: Build and push product-service
         uses: docker/build-push-action@v5
         with:
           context: services/product-service
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/product-service:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/product-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/product-service:${{ github.sha }}
 
       - name: Build and push order-service
         uses: docker/build-push-action@v5
         with:
           context: services/order-service
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/order-service:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/order-service:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/order-service:${{ github.sha }}
 
       - name: Build and push api-gateway
         uses: docker/build-push-action@v5
         with:
           context: services/api-gateway
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:${{ github.sha }}
