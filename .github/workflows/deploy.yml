@@ -87,3 +87,4 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DB_ENDPOINT: ${{ env.DB_ENDPOINT }}
           SQS_QUEUE_URL: ${{ env.SQS_QUEUE_URL }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}

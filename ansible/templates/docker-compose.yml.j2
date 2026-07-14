@@ -9,7 +9,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://{{ db_endpoint }}/appdb
       - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
       - SPRING_DATASOURCE_USERNAME=appuser
-      - SPRING_DATASOURCE_PASSWORD=ChangeMe123!
+      - SPRING_DATASOURCE_PASSWORD={{ db_password }}
       - SPRING_JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
     restart: always
 
@@ -21,7 +21,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://{{ db_endpoint }}/appdb
       - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
       - SPRING_DATASOURCE_USERNAME=appuser
-      - SPRING_DATASOURCE_PASSWORD=ChangeMe123!
+      - SPRING_DATASOURCE_PASSWORD={{ db_password }}
       - SPRING_JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - SQS_QUEUE_URL={{ sqs_queue_url }}
       - AWS_REGION=eu-west-1
@@ -35,7 +35,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://{{ db_endpoint }}/appdb
       - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
       - SPRING_DATASOURCE_USERNAME=appuser
-      - SPRING_DATASOURCE_PASSWORD=ChangeMe123!
+      - SPRING_DATASOURCE_PASSWORD={{ db_password }}
       - SPRING_JPA_DIALECT=org.hibernate.dialect.PostgreSQLDialect
       - SQS_QUEUE_URL={{ sqs_queue_url }}
       - AWS_REGION=eu-west-1

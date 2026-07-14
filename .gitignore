@@ -10,6 +10,7 @@
 
 # Ficheiros de trabalho locais (nao fazem parte do projeto)
 /trust.json
+/github-actions-policy.json
 
 # AWS credentials - NUNCA commitar
 *.pem

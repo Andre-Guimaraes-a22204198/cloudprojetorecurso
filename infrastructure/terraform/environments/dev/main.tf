@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "cloudprojetofinal-tf-state-eu-west-1"
+    bucket         = "cloudprojetofinal-tf-state-966289686735"
     key            = "envs/dev/terraform.tfstate"
     region         = "eu-west-1"
     dynamodb_table = "cloudprojetofinal-tf-locks"
