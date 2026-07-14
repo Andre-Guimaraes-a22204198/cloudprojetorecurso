@@ -64,7 +64,7 @@ jobs:
           mkdir -p ansible/inventory
           cat > ansible/inventory/hosts << EOF
           [app_servers]
-          $(echo $INSTANCE_IPS | jq -r '.[] | "app ansible_host=" + .')
+          $(echo $INSTANCE_IPS | jq -r 'to_entries[] | "app\(.key+1) ansible_host=" + .value')
 
           [app_servers:vars]
           ansible_user=ec2-user

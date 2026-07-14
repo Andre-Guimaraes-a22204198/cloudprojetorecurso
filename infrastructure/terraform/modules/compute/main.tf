@@ -9,9 +9,11 @@ data "aws_ami" "amazon_linux" {
 }
 
 resource "aws_instance" "app" {
-  count         = 3
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
+  count = 3
+  ami   = data.aws_ami.amazon_linux.id
+  # t3.small (2GB): t3.micro's 1GB was not enough to run all 4 Spring Boot
+  # containers via docker-compose without OOM-related instability.
+  instance_type = "t3.small"
   subnet_id     = var.public_subnet_ids[0]
   key_name      = var.key_name
 
