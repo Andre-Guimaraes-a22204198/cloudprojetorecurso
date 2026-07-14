@@ -60,18 +60,24 @@ jobs:
         # O dominio nao esta registado publicamente (Hosted Zone gratuita), por
         # isso resolvemos sempre contra os nameservers da propria zona em vez
         # do DNS publico -- isto ainda reflete o failover real do Route 53.
+        # So aceita "recuperado" depois de observar mesmo uma falha primeiro,
+        # para nao apanhar a primaria ainda saudavel antes do health check reagir.
         run: |
           DOMAIN="${{ steps.tf.outputs.domain }}"
           NS="ns-252.awsdns-31.com"
-          for i in $(seq 1 40); do
+          SAW_FAILURE=false
+          for i in $(seq 1 60); do
             IP=$(dig @"$NS" +short "$DOMAIN" A | tail -1)
             if [ -n "$IP" ]; then
               CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 -H "Host: $DOMAIN" "http://$IP/actuator/health" || echo 000)
             else
               CODE=000
             fi
-            echo "tentativa $i -> IP=$IP HTTP $CODE"
-            if [ "$CODE" = "200" ]; then
+            echo "tentativa $i -> IP=$IP HTTP $CODE (falha observada: $SAW_FAILURE)"
+            if [ "$CODE" != "200" ]; then
+              SAW_FAILURE=true
+            fi
+            if [ "$CODE" = "200" ] && [ "$SAW_FAILURE" = "true" ]; then
               T1=$(date +%s)
               echo "RTO_MEDIDO_SEGUNDOS=$((T1 - ${{ steps.start.outputs.t0 }}))" >> $GITHUB_ENV
               break
