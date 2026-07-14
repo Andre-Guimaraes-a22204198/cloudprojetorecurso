@@ -57,11 +57,20 @@ jobs:
             --min-size 0 --desired-capacity 0 --region eu-west-1
 
       - name: Esperar que o dominio volte a responder (mede RTO)
+        # O dominio nao esta registado publicamente (Hosted Zone gratuita), por
+        # isso resolvemos sempre contra os nameservers da propria zona em vez
+        # do DNS publico -- isto ainda reflete o failover real do Route 53.
         run: |
           DOMAIN="${{ steps.tf.outputs.domain }}"
+          NS="ns-252.awsdns-31.com"
           for i in $(seq 1 40); do
-            CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://$DOMAIN/actuator/health" || echo 000)
-            echo "tentativa $i -> HTTP $CODE"
+            IP=$(dig @"$NS" +short "$DOMAIN" A | tail -1)
+            if [ -n "$IP" ]; then
+              CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 -H "Host: $DOMAIN" "http://$IP/actuator/health" || echo 000)
+            else
+              CODE=000
+            fi
+            echo "tentativa $i -> IP=$IP HTTP $CODE"
             if [ "$CODE" = "200" ]; then
               T1=$(date +%s)
               echo "RTO_MEDIDO_SEGUNDOS=$((T1 - ${{ steps.start.outputs.t0 }}))" >> $GITHUB_ENV
